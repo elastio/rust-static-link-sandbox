@@ -1,0 +1,33 @@
+# Docker image used for experiments building our Rust code on a musl Linux
+#
+# This uses the official Rust image based on Alpine, which means the builds 
+# on this image will use the `x86_64-linux-unknown-musl` target
+FROM rust:1.54-alpine
+
+RUN apk add --no-cache \
+    curl \
+    bash \
+    make \
+    perl \
+    gcc g++ \
+    gdb \
+    git \
+    nodejs npm \
+    linux-headers \
+    libudev-zero libudev-zero-dev \
+    protoc \
+    openssl openssl-dev openssl-libs-static \
+    e2fsprogs e2fsprogs-dev e2fsprogs-extra e2fsprogs-libs e2fsprogs-static \
+    xfsprogs xfsprogs-dev xfsprogs-extra xfsprogs-libs \
+    musl-dev \
+    openssl-dev \
+    clang clang-dev clang-static \
+    llvm-static llvm-dev \
+    ncurses-static \
+    zlib-static
+    #rust cargo
+
+#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
+#    cp $HOME/.cargo/env /etc/profile.d/cargo.sh
+
+ENV PATH="/root/.cargo/bin:$PATH"
