@@ -33,13 +33,25 @@ ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
 CMD [ "sleep", "infinity" ]
 
 # [Optional] Uncomment this section to install additional OS packages.
-# RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-#     && apt-get -y install --no-install-recommends <your-package-list-here>
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends bash \
+    build-essential \
+    clang \
+    cmake \
+    file \
+    gcc g++ \
+    gdb \
+    git \
+    llvm llvm-dev \
+    libssl-dev \
+    make \
+    pkgconf \
+    && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Install Rust as the non-root user
-USER "${USERNAME}" 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && \
-    source $HOME/.cargo/env && \
-    cargo --version
+USER vscode
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    $HOME/.cargo/bin/cargo --version && \
+    $HOME/.cargo/bin/cargo install cargo-edit
 
 ENV PATH=/home/${USERNAME}/.cargo/bin:"${PATH}"
