@@ -40,3 +40,7 @@ In the `crates/` folder there are a number of very simple Rust crates, which mos
 ## The Attempts
 
 I'll go through the various things I've tried, some of which worked to some extent or another.  In each case there's some limitation or gotcha that made that particular approach unsuitable for Elastio, but maybe is good enough for your use case.
+
+
+
+TODO: Next try with `rust-rocksdb`

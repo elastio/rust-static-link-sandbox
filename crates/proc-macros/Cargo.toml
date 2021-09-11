@@ -1,0 +1,18 @@
+[package]
+name = "proc-macros"
+description = """
+A very simple Rust binary which makes use of proc macros.
+
+This will cause problems if you forget the `--target` arg when building
+"""
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = "0.1.51"
+tokio = { version = "1.11.0", default_features = false, features = ["rt-multi-thread", "macros"] }
+
+[package.metadata.test-crate]
+env = []

@@ -68,18 +68,20 @@ async fn run(args: Args) -> Result<()> {
     };
 
     let docker = docker::connect_docker().await?;
+    let cache_dir = std::env::temp_dir().join("rust-static-link-sandbox");
+    std::fs::create_dir_all(&cache_dir)?;
 
     for test in tests {
-        let span = info_span!("test case", test = %test.name);
+        let span = info_span!("test case", test = test.name());
         let _guard = span.enter();
 
         info!("Starting tests");
 
         for env in &environments {
-            let span = info_span!("env", env = %env.name);
+            let span = info_span!("env", env = env.name());
             let _guard = span.enter();
 
-            match test.run_test(&docker, env).await {
+            match test.run_test(&docker, &cache_dir, env).await {
                 Ok(TestResult::StaticBinary) => {
                     info!("Yay!  Resulting binary is static!");
                 }
@@ -93,7 +95,7 @@ async fn run(args: Args) -> Result<()> {
                     error!("Build failed: \n{}", output);
                 }
                 Err(e) => {
-                    error!("Couldn't attempt the build: \n{}", e)
+                    error!("Couldn't attempt the build: \n{:?}", e)
                 }
             }
         }

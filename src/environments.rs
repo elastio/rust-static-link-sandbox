@@ -8,15 +8,19 @@ use serde::Serialize;
 use shiplift::{
     builder::{ImageFilter, ImageListOptions},
     rep::{ContainerCreateInfo, Image},
-    ContainerOptions, Docker,
+    Container, ContainerOptions, Docker,
 };
-use std::future::Future;
+use std::{
+    future::Future,
+    path::{Path, PathBuf},
+};
+use tracing::*;
 
 static ENVIRONMENTS: Lazy<Vec<Environment>> = Lazy::new(|| {
     vec![
-        Environment::new("alpine-custom-rust", "x86_64-linux-alpine-musl"),
-        Environment::new("alpine-official-rust", "x86_64-linux-unknown-musl"),
-        Environment::new("debian-rust", "x86_64-linux-unknown-musl"),
+        Environment::new("alpine-custom-rust", "x86_64-alpine-linux-musl"),
+        Environment::new("alpine-official-rust", "x86_64-unknown-linux-musl"),
+        Environment::new("debian-rust", "x86_64-unknown-linux-musl"),
     ]
 });
 static ENVIRONMENT_NAMES: Lazy<Vec<&'static str>> =
@@ -26,12 +30,12 @@ static ENVIRONMENT_NAMES: Lazy<Vec<&'static str>> =
 pub(crate) struct Environment {
     /// The name of this environment for reporting purposes, and also the Docker image label
     /// which locates the Docker image for this environment
-    pub name: String,
+    name: String,
 
     /// The name of the Rust musl target.
     ///
     /// This is typicaly `x86_64-linux-unknown-musl` but Alpine comes with a custom build of Rust that uses a different name
-    pub musl_target: String,
+    musl_target: String,
 }
 
 impl Environment {
@@ -46,13 +50,26 @@ impl Environment {
         ENVIRONMENTS.iter().find(|env| env.name == name)
     }
 
-    /// Launch a new docker container with this environment's image
-    pub async fn run_in_docker<'docker, E, S, Vols, Vol>(
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn musl_target(&self) -> &str {
+        &self.musl_target
+    }
+
+    pub fn cargo_home(&self) -> &'static str {
+        "/root/.cargo"
+    }
+
+    /// Launch a new docker container with this environment's image, with the working directory
+    /// pre-set to `/build`
+    pub async fn launch_container<'docker, E, S, Vols, Vol>(
         &self,
         docker: &'docker Docker,
         envs: E,
         volumes: Vols,
-    ) -> Result<ContainerCreateInfo>
+    ) -> Result<Container<'docker>>
     where
         S: AsRef<str> + Serialize,
         E: AsRef<[S]> + Serialize,
@@ -64,14 +81,29 @@ impl Environment {
         // Create a new container running this image
         let vols = volumes.as_ref().iter().map(|v| v.as_ref()).collect();
         let options = ContainerOptions::builder(&image.id)
-            .attach_stderr(true)
-            .attach_stdout(true)
-            .attach_stdin(false)
-            .tty(false)
+            .tty(true)
             .env(envs)
             .volumes(vols)
+            .auto_remove(false)
+            .working_dir("/build")
+            // .user("1000")
             .build();
-        Ok(docker.containers().create(&options).await?)
+        let container_info = docker
+            .containers()
+            .create(&options)
+            .await
+            .wrap_err_with(|| eyre!("Error creating docker container from image {}", image.id))?;
+
+        debug!(container_id = %container_info.id, "Started container");
+
+        let container: Container<'docker> = docker.containers().get(&container_info.id);
+
+        container
+            .start()
+            .await
+            .wrap_err_with(|| eyre!("Error starting docker container from image {}", image.id))?;
+
+        Ok(container)
     }
 
     /// Find the docker image for this environment in the local docker daemon

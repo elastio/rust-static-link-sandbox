@@ -1,12 +1,8 @@
 # Docker image used for experiments building our Rust code on a musl Linux
 #
-# This uses the edge Alpine image and both `rustc` and `cargo` from the Alpine package.
-# Alpine ship patched versions of these tools that target a non-standard target
-# `x86_64-linux-alpine-musl` which is a tweaked version of `x86_64-linux-unknown-musl` which 
-# can perform dynamic linking but always with the musl runtime.
-#
-# This has some interesting properties which we'll explore in this sandbox
-FROM alpine:edge
+# This uses the official Rust image based on Alpine, which means the builds 
+# on this image will use the `x86_64-unknown-linux-musl` target
+FROM rust:1.54-alpine
 
 RUN apk add --no-cache \
     curl \
@@ -24,9 +20,10 @@ RUN apk add --no-cache \
     e2fsprogs e2fsprogs-dev e2fsprogs-extra e2fsprogs-libs e2fsprogs-static \
     xfsprogs xfsprogs-dev xfsprogs-extra xfsprogs-libs \
     musl-dev \
-    openssl-dev \
     clang clang-dev clang-static \
     llvm-static llvm-dev \
     ncurses-static \
     zlib-static \
-    rust cargo
+    && \
+    rustup target add x86_64-unknown-linux-gnu
+
