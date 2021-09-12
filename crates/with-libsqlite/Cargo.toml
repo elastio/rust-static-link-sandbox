@@ -1,0 +1,30 @@
+[package]
+name = "with-libsqlite"
+description = """
+A binary Rust crate which doesn't do anything but has a dependency on the `rusqlite` 
+crate which in turns has a dependency on the C SQLite library.
+
+The rusqlite crate is very flexible in terms of where it gets the SQLite lib from and how it 
+builds itself.  Other test cases already explore what happens when you are linking to a library
+already on the system (see `with-libudev`), so this crate is testing something else.  It uses the 
+`bundled` feature to force rusqlite to build SQLite from source bundled with the crate, so it will not
+try to find and link to already installed SQLite libraries on the build system.  That will reliably
+work when statically linking.
+
+The thing being tested here is the use of `bindgen` at compile time.  So we use the `buildtime_bindgen` 
+feature to force the use of bindgen rather than the pre-generated bindings which are the default.
+
+`bindgen` isn't required for `rusqlite` because that crate is well designed, but it is required by many 
+crates which wrap C APIs, and it has some annoying failure modes of its own, which this project helps to
+illustrate.
+"""
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rusqlite = { version = "0.25", default_features = false, features = [ "buildtime_bindgen", "bundled" ] }
+
+[package.metadata.test-crate]
+env = []

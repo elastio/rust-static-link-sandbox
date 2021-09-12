@@ -1,0 +1,29 @@
+[package]
+name = "with-libudev"
+description = """
+A binary Rust crate which doesn't do anything but has a dependency on the `libudev` 
+crate which in turns has a dependency on the C udev lib.
+
+OpenSSL deps exercised in other tests are a bit of a special case because openssl is common 
+enough that there are special affordances for it.  libudev is not that common and is more 
+representative of what the long tail of C API dependencies looks like.
+"""
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libudev = "0.3.0"
+
+[package.metadata.test-crate]
+
+# The libudev-sys crate's build.rs uses pkgconfig to find libudev
+#
+# When targeting musl pkgconfig thinks it's being invoked in a cross-compiled build, 
+# so you need to explicitly tell it shut up and let it happen.
+#
+# The PKG_CONFIG_ALL_STATIC doesn't actually cause anything to be statically linked, it 
+# passes `--static` to `pkg-config` which will cause `pkg-config` to list all dependent libs
+# as well, which isn't necessary when dynamically linking.
+env = ["PKG_CONFIG_ALLOW_CROSS=1", "PKG_CONFIG_ALL_STATIC=1"]

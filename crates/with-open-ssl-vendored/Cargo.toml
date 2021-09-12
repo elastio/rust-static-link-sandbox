@@ -14,4 +14,16 @@ edition = "2018"
 openssl = { version = "0.10", features = ["vendored"] }
 
 [package.metadata.test-crate]
-env = []
+env = [
+    # It's not clear if this is actually helpful or not, accounts differ.  It seems not to hurt in any case
+    "OPENSSL_STATIC=1",
+
+    # When targeting musl pkgconfig thinks it's being invoked in a cross-compiled build, 
+    # so you need to explicitly tell it shut up and let it happen.
+    "PKG_CONFIG_ALLOW_CROSS=1",
+
+    # The PKG_CONFIG_ALL_STATIC doesn't actually cause anything to be statically linked, it 
+    # passes `--static` to `pkg-config` which will cause `pkg-config` to list all dependent libs
+    # as well, which isn't necessary when dynamically linking.
+    "PKG_CONFIG_ALL_STATIC=1"
+]

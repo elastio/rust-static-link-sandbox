@@ -18,9 +18,26 @@ use tracing::*;
 
 static ENVIRONMENTS: Lazy<Vec<Environment>> = Lazy::new(|| {
     vec![
-        Environment::new("alpine-custom-rust", "x86_64-alpine-linux-musl"),
-        Environment::new("alpine-official-rust", "x86_64-unknown-linux-musl"),
-        Environment::new("debian-rust", "x86_64-unknown-linux-musl"),
+        Environment {
+            name: "alpine-custom-rust".to_string(),
+            musl_target: "x86_64-alpine-linux-musl".to_string(),
+            cargo_home: "/root/.cargo".to_string(),
+        },
+        Environment {
+            name: "alpine-official-rust".to_string(),
+            musl_target: "x86_64-unknown-linux-musl".to_string(),
+            cargo_home: "/usr/local/cargo".to_string(),
+        },
+        Environment {
+            name: "debian-rust".to_string(),
+            musl_target: "x86_64-unknown-linux-musl".to_string(),
+            cargo_home: "/usr/local/cargo".to_string(),
+        },
+        Environment {
+            name: "debian-static-libs".to_string(),
+            musl_target: "x86_64-unknown-linux-musl".to_string(),
+            cargo_home: "/usr/local/cargo".to_string(),
+        },
     ]
 });
 static ENVIRONMENT_NAMES: Lazy<Vec<&'static str>> =
@@ -36,16 +53,12 @@ pub(crate) struct Environment {
     ///
     /// This is typicaly `x86_64-linux-unknown-musl` but Alpine comes with a custom build of Rust that uses a different name
     musl_target: String,
+
+    /// The path (within the container) where cargo holds its caches
+    cargo_home: String,
 }
 
 impl Environment {
-    fn new(name: &str, musl_target: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            musl_target: musl_target.to_string(),
-        }
-    }
-
     pub fn from_name(name: &str) -> Option<&Environment> {
         ENVIRONMENTS.iter().find(|env| env.name == name)
     }
@@ -58,8 +71,8 @@ impl Environment {
         &self.musl_target
     }
 
-    pub fn cargo_home(&self) -> &'static str {
-        "/root/.cargo"
+    pub fn cargo_home(&self) -> &str {
+        &self.cargo_home
     }
 
     /// Launch a new docker container with this environment's image, with the working directory

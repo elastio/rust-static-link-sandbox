@@ -331,5 +331,7 @@ pub(crate) fn load_all_tests() -> Result<Vec<TestCrate>> {
         }
     }
 
+    test_crates.sort_unstable_by(|lhs, rhs| lhs.name.partial_cmp(&rhs.name).unwrap());
+
     Ok(test_crates)
 }
