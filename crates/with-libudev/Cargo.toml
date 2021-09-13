@@ -9,14 +9,22 @@ enough that there are special affordances for it.  libudev is not that common an
 representative of what the long tail of C API dependencies looks like.
 
 This test shows that it's currently not possible to achieve static linking with dependencies
-like `libudev` which use the `pkg-config` crate to find native libraries.  The issue at
-https://github.com/rust-lang/pkg-config-rs/issues/102 describes why.  The `pkg-config` crate is
-broken in that it's support for static linking assumes that any library located in `/usr` must not
-be statically linked, for reasons that are lost to the mists of time.
+like `libudev` which use the `pkg-config` crate to find native libraries, if those native libraries are 
+somewhere in `/usr`.  The issue at https://github.com/rust-lang/pkg-config-rs/issues/102 describes why.  
+The `pkg-config` crate is broken in that it's support for static linking assumes that any library located 
+in `/usr` must not be statically linked, for reasons that are lost to the mists of time.
+
+The only way this can be made to work currently is if all of your static libs are located somewhere other than
+`/usr`.  The `debian-static-libs` environment achieves this by building all necessary libraries from source, 
+and putting them in `/opt/musl`.  Then, by forcing the `PKG_CONFIG_LIBDIR` env var to point to the the `pkgconfigs` 
+for these built-from-source libraries, this bug is worked around.
 
 If your code or any transitive dependency uses `pkg-config` then you are going to have a very difficult
-time building a static binary.  If you figure out how to do it please submit a PR to this project so I 
-will know also.
+time building a static binary unless the library you're linking to happens to be one of the libraries 
+compiled from source in your build image.  
+
+If you figure out how to do this without the nasty hack described above,  please submit a PR to this project 
+so I will know also.
 """
 version = "0.1.0"
 edition = "2018"
