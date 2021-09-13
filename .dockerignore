@@ -1,3 +1,5 @@
-# For the purposes of knowing when to rebuild docker, only the Dockerfiles matter
+# For the purposes of knowing when to rebuild docker, only the Dockerfiles and
+# a few scripts matter
 **
 !/Dockerfile.*
+!/git-credential-ghtoken

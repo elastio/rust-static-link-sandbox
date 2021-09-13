@@ -18,7 +18,7 @@ struct Args {
     /// Specify the environment or environments to test
     ///
     /// Default is to use all environments
-    #[structopt(long = "environment", possible_values = environments::all_environment_names())]
+    #[structopt(long = "environment", possible_values = environments::all_environment_names(), number_of_values = 1)]
     envs: Vec<String>,
 
     /// Specific tests to run by name.

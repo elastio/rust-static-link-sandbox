@@ -7,6 +7,16 @@ crate which in turns has a dependency on the C udev lib.
 OpenSSL deps exercised in other tests are a bit of a special case because openssl is common 
 enough that there are special affordances for it.  libudev is not that common and is more 
 representative of what the long tail of C API dependencies looks like.
+
+This test shows that it's currently not possible to achieve static linking with dependencies
+like `libudev` which use the `pkg-config` crate to find native libraries.  The issue at
+https://github.com/rust-lang/pkg-config-rs/issues/102 describes why.  The `pkg-config` crate is
+broken in that it's support for static linking assumes that any library located in `/usr` must not
+be statically linked, for reasons that are lost to the mists of time.
+
+If your code or any transitive dependency uses `pkg-config` then you are going to have a very difficult
+time building a static binary.  If you figure out how to do it please submit a PR to this project so I 
+will know also.
 """
 version = "0.1.0"
 edition = "2018"
